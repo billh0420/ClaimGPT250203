@@ -1,4 +1,4 @@
-# evaluate_model.py
+# validate.py
 # from claim_gpt
 
 import random
@@ -9,7 +9,7 @@ from shared import get_encoded_statement
 
 from shared import generate_predicted_dictum
 
-def validate(statements, max_examples: int, encoder: Encoder, model, block_size: int):
+def validate(statements, max_examples: int, max_print_error: int, encoder: Encoder, model, block_size: int):
     print(f'=== start ===')
     start_time = time.time()
     print(f'max_examples={max_examples}')
@@ -37,7 +37,7 @@ def validate(statements, max_examples: int, encoder: Encoder, model, block_size:
                 max_error_index = max(max_error_index, i)
                 error_counts[i] += 1
                 error_count += 1
-                if error_count <= 6:
+                if error_count <= max_print_error:
                     print(f'===== Example {example + 1} error:{i} =====')
                     stripped_val_statement = encoder.remove_trailing_space_tokens(val_statement)
                     stripped_predicted_statement = encoder.remove_trailing_space_tokens(predicted_dictum)
