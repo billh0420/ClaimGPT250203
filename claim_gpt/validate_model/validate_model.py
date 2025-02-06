@@ -1,5 +1,5 @@
 # from claim_gpt
-# evaluate_model.py
+# validate_model.py
 
 import math
 
@@ -32,4 +32,4 @@ def validate_model(model, max_examples: int, max_print_error: int, max_print_ok:
     val_statements = [corpus_statements[x] for x in range(encoded_train_statement_count, corpus_statement_count)]
     print(f'epoch={model.epoch}; step={model.step}; n_head={model.n_head}; n_layer={model.n_layer}')
     print(f'#val_statements={len(val_statements)}')
-    validate(statements=val_statements, max_examples=max_examples, encoder=encoder, model=model, block_size=block_size)
+    validate(statements=val_statements, max_examples=max_examples, max_print_error=max_print_error, encoder=encoder, model=model, block_size=block_size)
