@@ -12,3 +12,9 @@ See his youtube video and gihub repository.
 D) It is best to use a GPU to train.
 
 E) Run the notebook claim_gpt.ipynb
+
+F) See my result on paperspace at the url:
+
+    https://console.paperspace.com/te2e3pzv0/notebook/rlqkdbbl59l5jdw
+
+
