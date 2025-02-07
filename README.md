@@ -7,3 +7,5 @@ B) I am using python 3.11
 C) This project is based on "Building makemore Part 2: MLP" by Andrej Karpathy.
 See his youtube video and gihub repository.
 
+D) It is best to use a GPU to train.
+
