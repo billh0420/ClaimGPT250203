@@ -170,3 +170,6 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 /corpus_base/corpus01/corpus01.txt
+/.idea/
+*.pt
+*corpus.txt
