@@ -6,13 +6,11 @@ import re
 from pathlib import Path
 
 from corpus_base.get_mmx_file_path import get_mmx_file_path
-from corpus_base.corpus01.get_corpus01_file_path import get_corpus01_file_path
 
 from shared import Parser03 as Parser
 
-def create_claim_corpus(corpus_file_path: Path):
-    # generate_all_claims(limit_count=10)
-    all_utterances = _generate_all_claims(limit_count=None)
+def create_claim_corpus(corpus_file_path: Path, corpus01_file_path: Path):
+    all_utterances = _generate_all_claims(corpus01_file_path=corpus01_file_path, limit_count=None)
     print(f'=== some claim_utterances ===')
     claim_utterances = []
     for i, utterance in enumerate(all_utterances):
@@ -37,9 +35,9 @@ def create_claim_corpus(corpus_file_path: Path):
             line = ' '.join(claim_utterance)
             file.write(f'{line}\n')
 
-def _generate_all_claims(limit_count: int or None):
+def _generate_all_claims(corpus01_file_path: Path, limit_count: int or None):
     all_utterances = []
-    wffs = _get_wffs()
+    wffs = _get_wffs(corpus01_file_path=corpus01_file_path)
     mmx_file_path = get_mmx_file_path()
     parser = Parser(mmx_file_path=mmx_file_path, limit_count=limit_count)
     count = 0
@@ -71,9 +69,8 @@ def _generate_all_claims(limit_count: int or None):
     print(f'#all_utterances={len(all_utterances)}')
     return all_utterances
 
-def _get_wffs():
+def _get_wffs(corpus01_file_path: Path):
     wffs = dict()
-    corpus01_file_path = get_corpus01_file_path()
     file = open(corpus01_file_path, 'r')
     while True:
         statement = file.readline()
