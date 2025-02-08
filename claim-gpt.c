@@ -218,18 +218,10 @@ int main() {
     return 0;
 }
 
-/* I've created a C implementation of the machine learning program shown in the Jupyter notebook. This is a simplified version that captures the main structure and components of the original Python program. Here are some key points about the implementation:
- *
- * Structure:
- *
- *
- * Split into multiple files for better organization
- * Header file with main declarations
- * Separate implementation files for encoder, model, and main functionality
- *
+/* C implementation of the machine learning program shown in the Jupyter notebook https://github.com/calebnwokocha/ClaimGPT250203/blob/main/claim_gpt.ipynb
+ * This is a simplified version that captures the main components of the original Python program. Here are some key points about the implementation:
  *
  * Key Components:
- *
  *
  * Model creation and management
  * Encoder for vocabulary handling
@@ -240,7 +232,6 @@ int main() {
  *
  * Important Features:
  *
- *
  * Maintains similar hyperparameters (block size, vocab size, etc.)
  * Implements basic transformer architecture
  * Handles training data in batches
@@ -248,7 +239,6 @@ int main() {
  *
  *
  * Limitations and Notes:
- *
  *
  * This is a simplified version - the actual transformer implementation would need more complexity
  * Memory management is included but could be more robust
