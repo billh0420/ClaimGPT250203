@@ -1,4 +1,4 @@
-/* C implementation of the machine learning program shown in the Jupyter notebook https://github.com/calebnwokocha/ClaimGPT250203/blob/main/claim_gpt.ipynb
+/* C implementation of the machine learning program shown in the Jupyter notebook https://github.com/calebnwokocha/ClaimGPT250203/blob/main/claim_gpt/claim_gpt.ipynb
  * This is a simplified version that captures the main components of the original Python program. Here are some key points about the implementation:
  *
  * Key Components:
