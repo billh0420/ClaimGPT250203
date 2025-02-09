@@ -1,8 +1,21 @@
+/* C implementation of the machine learning program shown in the Jupyter notebook https://github.com/calebnwokocha/ClaimGPT250203/blob/main/claim_gpt.ipynb
+ * This is a simplified version that captures the main components of the original Python program. Here are some key points about the implementation:
+ *
+ * Key Components:
+ *
+ * Model creation and management
+ * Encoder for vocabulary handling
+ * Training loop implementation
+ * Basic file I/O for corpus handling
+ * Inference engine
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 #include <limits.h>
+#include <math.h>
 
 #ifdef _WIN32
 #include <direct.h>
@@ -29,6 +42,7 @@ typedef struct {
 typedef struct Encoder {
     char** vocab;    // Array of token strings
     int* stoi;       // String-to-index mapping
+    char** itos;     // Mapping: integer -> token string.
     int vocab_size;
 } Encoder;
 
@@ -41,6 +55,7 @@ typedef struct {
     int n_head;
     int epoch;
     int step;
+    int eval_mode;
     Encoder* encoder;  // Pointer to the encoder
 } Model;
 
@@ -52,9 +67,15 @@ typedef struct {
 // Function declarations
 Model* create_model(int vocab_size, int block_size, int n_head, int n_layer);
 void train_model(Model* model, int max_train_epochs, const char* corpus_file_path, const char* model_file_path);
-void validate_model(Model* model, char* test_corpus_path, int max_examples);
 int* get_encoded_statement(const char* statement, Encoder* encoder, int block_size);
 int get_space_token(Encoder* encoder);
+char* generate_predicted_dictum(const char* prompt, const char* terminal_token, Model* model);
+char* remove_trailing_space_tokens(Encoder* encoder, const char* statement);
+char* decode(Encoder* encoder, int* tokens, int token_count);
+int* generate_tokens(int max_new_tokens, int* encoded_prefix, int prefix_length, Model* model, int terminal_token_id, int* out_total_length);
+int* encode_prompt(const char* prompt, Encoder* encoder, int* out_token_count);
+
+
 Encoder* create_encoder(char* corpus_path);
 void save_model(Model* model, const char* model_file_path);
 Model* load_model(char* path);
@@ -410,24 +431,134 @@ void train_model(Model* model, int max_train_epochs, const char* corpus_file_pat
     free(corpus_statements);
 }
 
-void validate_model(Model* model, char* test_corpus_path, int max_examples) {
-    FILE* fp = fopen(test_corpus_path, "r");
-    if (!fp) {
-        printf("Error: Could not open test corpus\n");
+// encode_prompt: Tokenizes a prompt (using whitespace) and returns a dynamic array of ints.
+// The number of tokens is returned via out_token_count.
+// (Caller is responsible for freeing the returned array.)
+int* encode_prompt(const char* prompt, Encoder* encoder, int* out_token_count) {
+    int count = 0;
+    char* prompt_copy = strdup(prompt);
+    char* token = strtok(prompt_copy, " ");
+    while (token != NULL) {
+        count++;
+        token = strtok(NULL, " ");
+    }
+    free(prompt_copy);
+    *out_token_count = count;
+
+    int* encoded = malloc(count * sizeof(int));
+    int index = 0;
+    prompt_copy = strdup(prompt);
+    token = strtok(prompt_copy, " ");
+    while (token != NULL) {
+        int token_index = 0;
+        int found = 0;
+        for (int i = 0; i < encoder->vocab_size; i++) {
+            if (strcmp(encoder->vocab[i], token) == 0) {
+                token_index = encoder->stoi[i];
+                found = 1;
+                break;
+            }
+        }
+        if (!found) token_index = 0; // default value if token not found
+        encoded[index++] = token_index;
+        token = strtok(NULL, " ");
+    }
+    free(prompt_copy);
+    return encoded;
+}
+
+// Stub for generate_tokens: In a complete implementation, this function would run the model's\n// inference loop to generate new tokens. Here it simply returns the prefix unchanged.
+int* generate_tokens(int max_new_tokens, int* encoded_prefix, int prefix_length, Model* model, int terminal_token_id, int* out_total_length) {
+    // For demonstration, we do not generate new tokens and simply return the prefix.
+    *out_total_length = prefix_length;
+    int* result = malloc(prefix_length * sizeof(int));
+    for (int i = 0; i < prefix_length; i++) {
+        result[i] = encoded_prefix[i];
+    }
+    return result;
+}
+
+// Stub for decode: Converts an array of token ints into a string using encoder->itos mapping.
+// The caller is responsible for freeing the returned string.
+char* decode(Encoder* encoder, int* tokens, int token_count) {
+    // Assume a maximum of 20 characters per token plus a separating space.
+    int buffer_size = token_count * 21 + 1;
+    char* decoded = malloc(buffer_size);
+    decoded[0] = '\\0';
+    for (int i = 0; i < token_count; i++) {
+        strncat(decoded, encoder->itos[tokens[i]], buffer_size - strlen(decoded) - 1);
+        if (i < token_count - 1) {
+            strncat(decoded, " ", buffer_size - strlen(decoded) - 1);
+        }
+    }
+    return decoded;
+}
+
+// Stub for remove_trailing_space_tokens: Trims trailing whitespace characters from the statement.
+char* remove_trailing_space_tokens(Encoder* encoder, const char* statement) {
+    (void)encoder;  // Unused in this simple implementation.
+    int len = strlen(statement);
+    while (len > 0 && (statement[len - 1] == ' ' || statement[len - 1] == '\\t' || statement[len - 1] == '\\n')) {
+        len--;
+    }
+    char* trimmed = malloc(len + 1);
+    strncpy(trimmed, statement, len);
+    trimmed[len] = '\\0';
+    return trimmed;
+}
+
+// --- generate_predicted_dictum Implementation ---
+
+// generate_predicted_dictum:
+//   Given a prompt and a terminal token (as strings), uses the model to generate a predicted dictum.
+//   It calculates how many new tokens to generate, encodes the prompt, calls generate_tokens,
+//   decodes the generated token sequence, and removes trailing space tokens.
+char* generate_predicted_dictum(const char* prompt, const char* terminal_token, Model* model) {
+    // Ensure terminal_token is provided.
+    if (terminal_token == NULL) {
+        fprintf(stderr, "Error: terminal_token is NULL\\n");
         exit(1);
     }
 
-    printf("Validating model on %d examples...\n", max_examples);
+    Encoder* encoder = model->encoder;
 
-    int correct = 0;
-    int total = 0;
-    char line[MAX_SEQUENCE_LENGTH];
-    while (fgets(line, sizeof(line), fp) && total < max_examples) {
-        // Simplified validation - actual implementation would compare model predictions with ground truth.
-        total++;
+    // Tokenize and encode the prompt (without padding) to determine its length.
+    int token_count = 0;
+    int* encoded_prefix = encode_prompt(prompt, encoder, &token_count);
+
+    // Calculate the maximum number of new tokens to generate.
+    int max_new_tokens = model->block_size - token_count;
+    if (max_new_tokens < 0)
+        max_new_tokens = 0;
+
+    // Find the terminal token's integer representation.
+    int terminal_token_id = -1;
+    for (int i = 0; i < encoder->vocab_size; i++) {
+        if (strcmp(encoder->vocab[i], terminal_token) == 0) {
+            terminal_token_id = encoder->stoi[i];
+            break;
+        }
     }
-    printf("Validation accuracy: %f%%\n", (float)correct / total * 100);
-    fclose(fp);
+    if (terminal_token_id == -1)
+        terminal_token_id = 0; // default if not found
+
+    // Generate tokens: this function appends new tokens to the prefix until max_new_tokens are generated or
+    // the terminal token is encountered. The output length is stored in out_total_length.
+    int total_length = 0;
+    int* generated_tokens = generate_tokens(max_new_tokens, encoded_prefix, token_count, model, terminal_token_id, &total_length);
+
+    // Decode the generated token sequence into a string.
+    char* decoded = decode(encoder, generated_tokens, total_length);
+
+    // Remove any trailing space tokens from the decoded string.
+    char* predicted_dictum = remove_trailing_space_tokens(encoder, decoded);
+
+    // Free temporary resources.
+    free(encoded_prefix);
+    free(generated_tokens);
+    free(decoded);
+
+    return predicted_dictum;
 }
 
 // Stub for save_model
@@ -468,47 +599,53 @@ void free_model(Model* model) {
     free(model);
 }
 
-int main() {
-    srand(time(NULL));
+int main(int argc, char* argv[]) {
+    // Verify that the inference mode is requested.
+    if (argc < 2 || strcmp(argv[1], "inference") != 0) {
+        printf("Usage: %s inference\n", argv[0]);
+        return 1;
+    }
 
-    // Create output directories
-    system("mkdir -p math_gpt_output/main_claim/corpus");
-    system("mkdir -p math_gpt_output/main_claim/models");
+    // Define the model file path.
+    const char* model_file_path = "claim_gpt_output/main_claim/models/model.bin";
 
-    // Create encoder and assign it to the model.
-    printf("Creating encoder...\n");
-    Encoder* encoder = create_encoder("math_gpt_output/main_claim/corpus/corpus.txt");
+    // Load the pre-trained model.
+    Model* model = load_model((char*)model_file_path);
+    if (!model) {
+        fprintf(stderr, "Error: Failed to load model from %s\n", model_file_path);
+        return 1;
+    }
 
-    printf("Creating model...\n");
-    Model* model = create_model(VOCAB_SIZE, BLOCK_SIZE, N_HEAD, N_LAYER);
-    model->encoder = encoder;
+    // Inference engine prompt.
+    printf("ClaimGPT Inference Engine\n");
+    printf("Type a prompt and press Enter. Type 'exit' to quit.\n\n");
 
-    // Train model: note the correct parameter order.
-    printf("Training model...\n");
-    train_model(model, MAX_TRAIN_EPOCHS, "math_gpt_output/main_claim/corpus/train_corpus.txt", "math_gpt_output/main_claim/models/model.bin");
+    char prompt[1024];
+    while (1) {
+        printf("Enter prompt: ");
+        if (!fgets(prompt, sizeof(prompt), stdin)) {
+            break;  // End-of-file or error.
+        }
+        // Remove trailing newline character.
+        prompt[strcspn(prompt, "\n")] = '\0';
 
-    // Save model.
-    printf("Saving model...\n");
-    save_model(model, "math_gpt_output/main_claim/models/model.bin");
+        // Allow user to exit.
+        if (strcmp(prompt, "exit") == 0) {
+            break;
+        }
 
-    // Validate model.
-    printf("Validating model...\n");
-    validate_model(model, "math_gpt_output/main_claim/corpus/test_corpus.txt", 10);
+        // Generate predicted dictum using the provided terminal token "<|end_claim|>".
+        char* predicted_dictum = generate_predicted_dictum(prompt, "<|end_claim|>", model);
+        if (predicted_dictum) {
+            printf("Predicted dictum: %s\n\n", predicted_dictum);
+            free(predicted_dictum);
+        } else {
+            printf("Error generating dictum.\n\n");
+        }
+    }
 
-    // Cleanup.
+    // Clean up the model resources.
     free_model(model);
 
     return 0;
 }
-
-/* C implementation of the machine learning program shown in the Jupyter notebook https://github.com/calebnwokocha/ClaimGPT250203/blob/main/claim_gpt.ipynb
- * This is a simplified version that captures the main components of the original Python program. Here are some key points about the implementation:
- *
- * Key Components:
- *
- * Model creation and management
- * Encoder for vocabulary handling
- * Training loop implementation
- * Validation functionality
- * Basic file I/O for corpus handling
- */
