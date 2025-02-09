@@ -8,9 +8,6 @@ Create a Generative Pretrained Transformer model for Metamath
 
 - Run the notebook claim_gpt.ipynb to get started. Refer to its README.
 
-- See my result on paperspace at the url:
-    https://console.paperspace.com/te2e3pzv0/notebook/rlqkdbbl59l5jdw
-
 This project is based on the github repo by Andrej Karpathy https://github.com/karpathy/ng-video-lecture 
 
 I based my code on gpt.py (which I refactored into multiply py files). That file is 225 lines.
