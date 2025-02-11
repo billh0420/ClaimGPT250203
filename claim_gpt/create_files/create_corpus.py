@@ -31,16 +31,14 @@ def _get_corpus_statements(max_count, block_size, corpus_file_path: Path):
     all_statements = _get_statements(file_name=claim_corpus_file_path)
     corpus_statements = []
     corpus_statement_count = 0
-    prefixes = ['ax-mp ', 'mp2 ', 'mp2b ', 'mpd ', 'syl ']
+    prefixes = ['ax-mp', 'mp2', 'mp2b', 'mpd', 'syl'] # original prefixes 250209
+    prefixes += ['a2i', 'mpi', 'mpisyl', 'a2d', 'sylcom', 'syl5com', 'com12', 'syl6', 'syl56', 'syl6com', 'mpcom'] # more prefixes 250210
+    prefixes += ['syli', 'syl2im', 'syl2imc', 'mpdd', 'mpid', 'mpdi', 'mpii', 'syld', 'syldc', 'mp2d']  # more prefixes 250210
+    prefixes += ['pm2.43i', 'pm2.43d', 'pm2.43a', 'pm2.43b']  # more prefixes 250210
     counts_by_prefix = dict(zip(prefixes, [0] * len(prefixes)))
     for statement in all_statements:
-        corpus_statement = None
-        for prefix in prefixes:
-            if statement.startswith(prefix):
-                corpus_statement = statement[len(prefix):]
-                counts_by_prefix[prefix] += 1
-                break
-        if corpus_statement is None:
+        prefix, corpus_statement = statement.split(' ', maxsplit=1)
+        if prefix not in prefixes:
             continue
         if corpus_statement.startswith('<|start_claim|> <|conclude|>'):
             continue
@@ -49,11 +47,12 @@ def _get_corpus_statements(max_count, block_size, corpus_file_path: Path):
             continue
         corpus_statements.append(corpus_statement)
         corpus_statement_count += 1
+        counts_by_prefix[prefix] += 1
         if corpus_statement_count >= max_count:
             break
     print(f'last corpus_statement: {corpus_statements[-1]}')
     for prefix in prefixes:
-        print(f'{prefix[:-1]}-count={counts_by_prefix[prefix]}')
+        print(f'{prefix}-count={counts_by_prefix[prefix]}')
     return corpus_statements
 
 def _get_statements(file_name, max_proved_statement_count=None):
