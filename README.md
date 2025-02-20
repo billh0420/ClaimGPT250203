@@ -2,19 +2,15 @@
 
 Create a Generative Pretrained Transformer model for Metamath
 
-A) You need to run once corpus_base/corpus01/main_corpus01.py to create file corpus01.txt
+- I am using python 3.11
 
-B) I am using python 3.11
+- It is best to use a GPU to train.
 
-C) This project is based on "Building makemore Part 2: MLP" by Andrej Karpathy.
-See his youtube video and gihub repository.
+- Run the notebook claim_gpt.ipynb to get started. Refer to its README.
 
-D) It is best to use a GPU to train.
+This project is based on the github repo by Andrej Karpathy https://github.com/karpathy/ng-video-lecture 
 
-E) Run the notebook claim_gpt.ipynb
-
-F) See my result on paperspace at the url:
-
-    https://console.paperspace.com/te2e3pzv0/notebook/rlqkdbbl59l5jdw
-
-
+I based my code on gpt.py (which I refactored into multiply py files). That file is 225 lines.
+I ignored the file bigram.py.
+That repo uses a Shakespeare corpus to generate Shakespeare like dialog.
+I kept the model code in gpt.py and just replaced the Shakespeare corpus with a Metamath corpus that I generated from Python.

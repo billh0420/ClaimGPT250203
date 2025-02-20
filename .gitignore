@@ -169,6 +169,9 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+# ClaimGPT250203
+/home_*/
 /corpus_base/corpus01/corpus01.txt
 /.idea/
 *.pt
